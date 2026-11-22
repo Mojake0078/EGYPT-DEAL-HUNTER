@@ -27,10 +27,7 @@ interface ScraperStub {
   close(): void
 }
 
-type ScraperCtor = new (
-  address: string,
-  creds: ReturnType<typeof credentials.createInsecure>,
-) => ScraperStub
+type ScraperCtor = new (address: string, creds: ReturnType<typeof credentials.createInsecure>) => ScraperStub
 
 const STATUS: Record<ShopResultMessage['status'], ShopStatusName> = {
   SHOP_STATUS_UNSPECIFIED: 'failed',
