@@ -52,7 +52,8 @@ function mapOffer(offer: ShopResultMessage['offers'][number]): OfferDto {
     STOCK_STATUS[offer.stockStatus ?? 'STOCK_STATUS_UNSPECIFIED'] ?? 'unknown'
   // Old sidecars only supplied in_stock; preserve that behavior during a rolling upgrade.
   const stockStatus =
-    (offer.stockStatus === undefined || offer.stockStatus === 'STOCK_STATUS_UNSPECIFIED') &&
+    (offer.stockStatus === undefined ||
+      offer.stockStatus === 'STOCK_STATUS_UNSPECIFIED') &&
     offer.inStock
       ? 'in_stock'
       : mapped
@@ -100,7 +101,11 @@ export class GrpcScraperClient implements ScraperClient {
       })
       call.on('end', () => resolve({ offers, shops }))
       call.on('error', (err: ServiceError) =>
-        resolve({ offers, shops, error: `${err.code}: ${err.details || err.message}` }),
+        resolve({
+          offers,
+          shops,
+          error: `${err.code}: ${err.details || err.message}`,
+        }),
       )
     })
   }
