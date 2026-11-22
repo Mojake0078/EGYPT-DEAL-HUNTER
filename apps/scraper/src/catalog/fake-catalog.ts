@@ -39,10 +39,6 @@ export interface FakeCatalogOptions {
   latencyMs?: number
 }
 
-/**
- * Deterministic stand-in for the real scraper (CI, tests, demos). Prices move by a few percent per day,
- * out-of-stock and failing shops are simulated, and unknown queries get a price derived from their hash.
- */
 export class FakeCatalog implements ShopCatalog {
   readonly mode = 'fake' as const
   private readonly now: () => Date
@@ -75,12 +71,12 @@ export class FakeCatalog implements ShopCatalog {
     shop: (typeof DEMO_SHOPS)[number],
   ): ShopResultMessage {
     const h = stableHash(`${q}|${shop.id}|${day}`)
-    // About one shop-day in twelve fails, like a real shop timing out.
     if (h % 12 === 0)
       return { shop: shop.id, status: 'SHOP_STATUS_FAILED', offers: [], error: 'timed out (simulated)' }
     const swing = ((h % 13) - 6) / 100
     const price = Math.round(baseEgp * (1 + shop.markup + swing))
     const slug = q.replace(/[^a-z0-9]+/g, '-')
+    const inStock = (h >> 4) % 9 !== 0
     return {
       shop: shop.id,
       status: 'SHOP_STATUS_FOUND',
@@ -91,7 +87,8 @@ export class FakeCatalog implements ShopCatalog {
           title,
           pricePiastres: toPiastres(price),
           url: `https://www.${shop.domain}/search?q=${encodeURIComponent(q)}#demo-${slug}`,
-          inStock: (h >> 4) % 9 !== 0,
+          stockStatus: inStock ? 'STOCK_STATUS_IN_STOCK' : 'STOCK_STATUS_OUT_OF_STOCK',
+          inStock,
         },
       ],
     }

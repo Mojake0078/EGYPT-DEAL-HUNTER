@@ -1,20 +1,12 @@
 import {
-  loadPackageDefinition,
-  Server,
-  ServerCredentials,
-  type ServerWritableStream,
-  type ServiceDefinition,
+  loadPackageDefinition, Server, ServerCredentials, type ServerWritableStream, type ServiceDefinition,
 } from '@grpc/grpc-js'
 import { loadSync } from '@grpc/proto-loader'
 import {
-  PROTO_LOADER_OPTIONS,
-  SCRAPER_PROTO_PATH,
-  type SearchRequestMessage,
-  type ShopResultMessage,
+  PROTO_LOADER_OPTIONS, SCRAPER_PROTO_PATH, type SearchRequestMessage, type ShopResultMessage,
 } from '@price-watch/contracts'
 import { GrpcScraperClient } from './grpc-scraper-client'
 
-/** In-process fake sidecar: answers two shops, then (for "slow" queries) never finishes. */
 async function startFakeSidecar(): Promise<{ server: Server; port: number }> {
   const definition = loadPackageDefinition(loadSync(SCRAPER_PROTO_PATH, PROTO_LOADER_OPTIONS)) as unknown as {
     pricewatch: { scraper: { v1: { Scraper: { service: ServiceDefinition } } } }
@@ -23,12 +15,11 @@ async function startFakeSidecar(): Promise<{ server: Server; port: number }> {
   server.addService(definition.pricewatch.scraper.v1.Scraper.service, {
     search: (call: ServerWritableStream<SearchRequestMessage, ShopResultMessage>) => {
       call.write({
-        shop: 'noon',
-        status: 'SHOP_STATUS_FOUND',
-        error: '',
-        offers: [
-          { shop: 'noon', title: 'Demo', pricePiastres: 99_900, url: 'https://example.com/n', inStock: true },
-        ],
+        shop: 'noon', status: 'SHOP_STATUS_FOUND', error: '',
+        offers: [{
+          shop: 'noon', title: 'Demo', pricePiastres: 99_900, url: 'https://example.com/n',
+          inStock: true, stockStatus: 'STOCK_STATUS_IN_STOCK',
+        }],
       })
       call.write({ shop: 'jumia', status: 'SHOP_STATUS_BLOCKED', error: 'HTTP 403', offers: [] })
       if (call.request.query !== 'slow') call.end()
@@ -47,36 +38,29 @@ async function startFakeSidecar(): Promise<{ server: Server; port: number }> {
 describe('GrpcScraperClient', () => {
   let server: Server
   let client: GrpcScraperClient
-
   beforeAll(async () => {
     const fake = await startFakeSidecar()
     server = fake.server
     client = new GrpcScraperClient(`127.0.0.1:${fake.port}`)
   })
-
   afterAll(() => {
     client.close()
     server.forceShutdown()
   })
-
-  it('collects the streamed shop results into offers and outcomes', async () => {
+  it('collects streamed offers with their explicit stock status', async () => {
     expect(await client.search('demo', 5000)).toEqual({
-      offers: [
-        { shop: 'noon', title: 'Demo', pricePiastres: 99_900, url: 'https://example.com/n', inStock: true },
-      ],
-      shops: [
-        { shop: 'noon', status: 'found' },
-        { shop: 'jumia', status: 'blocked', error: 'HTTP 403' },
-      ],
+      offers: [{
+        shop: 'noon', title: 'Demo', pricePiastres: 99_900, url: 'https://example.com/n',
+        stockStatus: 'in_stock', inStock: true,
+      }],
+      shops: [{ shop: 'noon', status: 'found' }, { shop: 'jumia', status: 'blocked', error: 'HTTP 403' }],
     })
   })
-
-  it('keeps the partial results and reports the error when the deadline passes', async () => {
+  it('keeps partial results when the deadline passes', async () => {
     const result = await client.search('slow', 300)
     expect(result.shops.map((s) => s.shop)).toEqual(['noon', 'jumia'])
-    expect(result.error).toMatch(/^4: /) // DEADLINE_EXCEEDED
+    expect(result.error).toMatch(/^4: /)
   })
-
   it('reports an unreachable sidecar as an error instead of throwing', async () => {
     const offline = new GrpcScraperClient('127.0.0.1:1')
     const result = await offline.search('demo', 1000)

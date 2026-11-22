@@ -17,13 +17,22 @@ message SearchRequest {
   repeated string shops = 2;
 }
 
+enum StockStatus {
+  STOCK_STATUS_UNSPECIFIED = 0;
+  STOCK_STATUS_IN_STOCK = 1;
+  STOCK_STATUS_OUT_OF_STOCK = 2;
+  STOCK_STATUS_UNKNOWN = 3;
+}
+
 message Offer {
   string shop = 1;
   string title = 2;
   // Price in EGP piastres (1 EGP = 100 piastres): integers avoid float drift across languages.
   int64 price_piastres = 3;
   string url = 4;
+  // Legacy boolean retained for wire compatibility; stock_status is authoritative.
   bool in_stock = 5;
+  StockStatus stock_status = 6;
 }
 
 enum ShopStatus {

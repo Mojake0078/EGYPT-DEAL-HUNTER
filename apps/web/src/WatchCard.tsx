@@ -44,7 +44,7 @@ export function WatchCard({ watch, version, onChanged, onError }: Props) {
           </>
         ) : (
           <span className="price price--none">
-            {watch.latest ? 'No in-stock offer' : 'Waiting for the first check…'}
+            {watch.latest ? 'No confirmed in-stock offer' : 'Waiting for the first check…'}
           </span>
         )}
       </div>

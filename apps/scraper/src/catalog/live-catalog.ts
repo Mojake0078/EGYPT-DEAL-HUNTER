@@ -1,9 +1,9 @@
-import type { ShopResultMessage, ShopStatusMessage } from '@price-watch/contracts'
+import type { ShopResultMessage, StockStatusMessage } from '@price-watch/contracts'
 import { toPiastres, type ShopCatalog } from './shop-catalog'
 
 /**
- * The subset of the `egypt-price-scraper` library (github.com/ahmedoshelmy/egypt-price-scraper) this sidecar uses.
- * Declared here instead of imported so the monorepo builds without the library; the Docker image installs it.
+ * The subset of the `egypt-price-scraper` library this sidecar uses.
+ * The library's `sold` field is not a reliable stock boolean: it may contain sales counts or be null.
  */
 interface ScraperListing {
   source: string
@@ -26,11 +26,28 @@ export interface ScraperLibrary {
   ): Promise<{ listings: ScraperListing[]; sources: ScraperSourceOutcome[] }>
 }
 
-const STATUS: Record<ScraperSourceOutcome['status'], ShopStatusMessage> = {
+const STATUS: Record<ScraperSourceOutcome['status'], ShopResultMessage['status']> = {
   found: 'SHOP_STATUS_FOUND',
   none: 'SHOP_STATUS_NONE',
   failed: 'SHOP_STATUS_FAILED',
   blocked: 'SHOP_STATUS_BLOCKED',
+}
+
+/**
+ * Be deliberately conservative. Only explicit, unambiguous stock phrases are accepted.
+ * Sales counts, nulls, unfamiliar text and ambiguous labels remain UNKNOWN.
+ */
+export function classifyStock(sold: string | null): StockStatusMessage {
+  const value = sold?.trim().toLowerCase().replace(/\s+/g, ' ')
+  if (!value) return 'STOCK_STATUS_UNKNOWN'
+  if (/^(out of stock|currently unavailable|unavailable|sold out)$/.test(value))
+    return 'STOCK_STATUS_OUT_OF_STOCK'
+  if (
+    /^(in stock|available|available now|add to cart|only \d+ left in stock)$/.test(value) ||
+    /^only \d+ left$/.test(value)
+  )
+    return 'STOCK_STATUS_IN_STOCK'
+  return 'STOCK_STATUS_UNKNOWN'
 }
 
 /** Loads the ESM-only library from CommonJS (TypeScript keeps this a real dynamic import under node16). */
@@ -65,13 +82,17 @@ export class LiveCatalog implements ShopCatalog {
     for (const outcome of result.sources) {
       const offers = result.listings
         .filter((l) => l.source === outcome.source && l.price !== null && l.price > 0)
-        .map((l) => ({
-          shop: l.source,
-          title: l.title,
-          pricePiastres: toPiastres(l.price ?? 0),
-          url: l.url,
-          inStock: l.sold !== 'Out of stock',
-        }))
+        .map((l) => {
+          const stockStatus = classifyStock(l.sold)
+          return {
+            shop: l.source,
+            title: l.title,
+            pricePiastres: toPiastres(l.price ?? 0),
+            url: l.url,
+            stockStatus,
+            inStock: stockStatus === 'STOCK_STATUS_IN_STOCK',
+          }
+        })
       yield { shop: outcome.source, status: STATUS[outcome.status], offers, error: outcome.error ?? '' }
     }
   }
