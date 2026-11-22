@@ -22,7 +22,11 @@ describe('LiveCatalog', () => {
           { source: 'noon', title: 'Mouse A', url: 'https://example.com/a', price: 899.5, sold: null },
           { source: 'noon', title: 'Mouse B', url: 'https://example.com/b', price: null, sold: null },
           {
-            source: 'btech', title: 'Mouse C', url: 'https://example.com/c', price: 950, sold: 'Out of stock',
+            source: 'btech',
+            title: 'Mouse C',
+            url: 'https://example.com/c',
+            price: 950,
+            sold: 'Out of stock',
           },
         ],
         sources: [
@@ -33,28 +37,49 @@ describe('LiveCatalog', () => {
       }),
     }
     const results = []
-    for await (const r of new LiveCatalog(library, { shopTimeoutMs: 1000, shopConcurrency: 2 }).search('mouse', [])) {
+    for await (const r of new LiveCatalog(library, { shopTimeoutMs: 1000, shopConcurrency: 2 }).search(
+      'mouse',
+      [],
+    )) {
       results.push(r)
     }
     expect(results).toEqual([
       {
-        shop: 'noon', status: 'SHOP_STATUS_FOUND', error: '',
-        offers: [{
-          shop: 'noon', title: 'Mouse A', pricePiastres: 89_950, url: 'https://example.com/a',
-          stockStatus: 'STOCK_STATUS_UNKNOWN', inStock: false,
-        }],
+        shop: 'noon',
+        status: 'SHOP_STATUS_FOUND',
+        error: '',
+        offers: [
+          {
+            shop: 'noon',
+            title: 'Mouse A',
+            pricePiastres: 89_950,
+            url: 'https://example.com/a',
+            stockStatus: 'STOCK_STATUS_UNKNOWN',
+            inStock: false,
+          },
+        ],
       },
       {
-        shop: 'btech', status: 'SHOP_STATUS_FOUND', error: '',
-        offers: [{
-          shop: 'btech', title: 'Mouse C', pricePiastres: 95_000, url: 'https://example.com/c',
-          stockStatus: 'STOCK_STATUS_OUT_OF_STOCK', inStock: false,
-        }],
+        shop: 'btech',
+        status: 'SHOP_STATUS_FOUND',
+        error: '',
+        offers: [
+          {
+            shop: 'btech',
+            title: 'Mouse C',
+            pricePiastres: 95_000,
+            url: 'https://example.com/c',
+            stockStatus: 'STOCK_STATUS_OUT_OF_STOCK',
+            inStock: false,
+          },
+        ],
       },
       { shop: 'amazon', status: 'SHOP_STATUS_BLOCKED', error: 'HTTP 403', offers: [] },
     ])
     expect(library.searchAll).toHaveBeenCalledWith('mouse', {
-      shops: undefined, timeoutMs: 1000, concurrency: 2,
+      shops: undefined,
+      timeoutMs: 1000,
+      concurrency: 2,
     })
   })
 })
