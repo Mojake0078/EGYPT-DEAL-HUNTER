@@ -21,10 +21,7 @@ export interface SearchRequestMessage {
 }
 
 export type StockStatusMessage =
-  | 'STOCK_STATUS_UNSPECIFIED'
-  | 'STOCK_STATUS_IN_STOCK'
-  | 'STOCK_STATUS_OUT_OF_STOCK'
-  | 'STOCK_STATUS_UNKNOWN'
+  'STOCK_STATUS_UNSPECIFIED' | 'STOCK_STATUS_IN_STOCK' | 'STOCK_STATUS_OUT_OF_STOCK' | 'STOCK_STATUS_UNKNOWN'
 
 export interface OfferMessage {
   shop: string
