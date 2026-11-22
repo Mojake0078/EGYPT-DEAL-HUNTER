@@ -69,7 +69,7 @@ function mapOffer(offer: ShopResultMessage['offers'][number]): OfferDto {
 
 /** gRPC adapter. Partial results received before the deadline are retained. */
 export class GrpcScraperClient implements ScraperClient {
-  private readonly stub: ScraperStub;
+  private readonly stub: ScraperStub
 
   constructor(address: string) {
     const definition = loadPackageDefinition(
