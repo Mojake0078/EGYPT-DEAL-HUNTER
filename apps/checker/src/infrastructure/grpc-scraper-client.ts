@@ -45,12 +45,10 @@ const STOCK_STATUS: Record<string, StockStatusName> = {
 }
 
 function mapOffer(offer: ShopResultMessage['offers'][number]): OfferDto {
-  const mapped =
-    STOCK_STATUS[offer.stockStatus ?? 'STOCK_STATUS_UNSPECIFIED'] ?? 'unknown'
+  const mapped = STOCK_STATUS[offer.stockStatus ?? 'STOCK_STATUS_UNSPECIFIED'] ?? 'unknown'
   // Old sidecars only supplied in_stock; preserve that behavior during a rolling upgrade.
   const stockStatus =
-    (offer.stockStatus === undefined ||
-      offer.stockStatus === 'STOCK_STATUS_UNSPECIFIED') && offer.inStock
+    (offer.stockStatus === undefined || offer.stockStatus === 'STOCK_STATUS_UNSPECIFIED') && offer.inStock
       ? 'in_stock'
       : mapped
 
@@ -74,10 +72,7 @@ export class GrpcScraperClient implements ScraperClient {
     ) as unknown as {
       pricewatch: { scraper: { v1: { Scraper: ScraperCtor } } }
     }
-    this.stub = new definition.pricewatch.scraper.v1.Scraper(
-      address,
-      credentials.createInsecure(),
-    )
+    this.stub = new definition.pricewatch.scraper.v1.Scraper(address, credentials.createInsecure())
   }
 
   search(query: string, deadlineMs: number): Promise<ScrapeResult> {
