@@ -1,12 +1,7 @@
 import { join } from 'node:path'
 
 /** Absolute path of the gRPC contract, shipped inside this package. */
-export const SCRAPER_PROTO_PATH = join(
-  __dirname,
-  '..',
-  'proto',
-  'scraper.proto',
-)
+export const SCRAPER_PROTO_PATH = join(__dirname, '..', 'proto', 'scraper.proto')
 export const SCRAPER_PACKAGE = 'pricewatch.scraper.v1'
 export const SCRAPER_SERVICE = 'Scraper'
 
