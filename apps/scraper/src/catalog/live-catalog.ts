@@ -11,6 +11,8 @@ interface ScraperListing {
   url: string
   price: number | null
   sold: string | null
+  /** Present in the scraper library; distinguishes a shop's own page from Pricena relays. */
+  via?: 'direct' | 'pricena'
 }
 
 interface ScraperSourceOutcome {
@@ -38,13 +40,13 @@ const STATUS: Record<ScraperSourceOutcome['status'], ShopResultMessage['status']
  * Sales counts, nulls, unfamiliar text and ambiguous labels remain UNKNOWN.
  */
 export function classifyStock(sold: string | null): StockStatusMessage {
-  const value = sold?.trim().toLowerCase().replace(/\s+/g, ' ')
+  const value = sold?.trim().toLowerCase().replace(/\\s+/g, ' ')
   if (!value) return 'STOCK_STATUS_UNKNOWN'
   if (/^(out of stock|currently unavailable|unavailable|sold out)$/.test(value))
     return 'STOCK_STATUS_OUT_OF_STOCK'
   if (
-    /^(in stock|available|available now|add to cart|only \d+ left in stock)$/.test(value) ||
-    /^only \d+ left$/.test(value)
+    /^(in stock|available|available now|add to cart|only \\d+ left in stock)$/.test(value) ||
+    /^only \\d+ left$/.test(value)
   )
     return 'STOCK_STATUS_IN_STOCK'
   return 'STOCK_STATUS_UNKNOWN'
@@ -83,7 +85,12 @@ export class LiveCatalog implements ShopCatalog {
       const offers = result.listings
         .filter((l) => l.source === outcome.source && l.price !== null && l.price > 0)
         .map((l) => {
-          const stockStatus = classifyStock(l.sold)
+          // The pinned Jumia parser marks explicit OOS cards as "Out of stock".
+          // A direct Jumia card with no sold note is therefore available; Pricena
+          // relays stay UNKNOWN because their stock note is not authoritative.
+          const sold =
+            l.source === 'jumia' && l.via === 'direct' && l.sold === null ? 'In Stock' : l.sold
+          const stockStatus = classifyStock(sold)
           return {
             shop: l.source,
             title: l.title,
