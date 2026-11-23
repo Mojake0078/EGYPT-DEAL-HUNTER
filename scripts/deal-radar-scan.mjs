@@ -1,8 +1,9 @@
-import { console } from 'node:console'
+import { Console } from 'node:console'
 import { mkdir, writeFile } from 'node:fs/promises'
 import process from 'node:process'
 import { searchAll } from '../libs/egypt-price-scraper/dist/index.js'
 
+const logger = new Console({ stdout: process.stdout, stderr: process.stderr })
 const SHOPS = ['amazon', 'jumia', 'noon']
 const SEED_QUERIES = [
   'Samsung Galaxy A56',
@@ -69,10 +70,10 @@ async function main() {
   const products = new Map()
   const sourceRuns = []
 
-  console.log(`Deal Radar one-shot scan: ${queries.length} queries across ${SHOPS.join(', ')}`)
+  logger.log(`Deal Radar one-shot scan: ${queries.length} queries across ${SHOPS.join(', ')}`)
 
   for (const query of queries) {
-    console.log(`\nSearching: ${query}`)
+    logger.log(`\nSearching: ${query}`)
     try {
       const result = await searchAll(query, {
         shops: SHOPS,
@@ -106,12 +107,12 @@ async function main() {
       const found = result.sources.filter((source) => source.status === 'found').length
       const blocked = result.sources.filter((source) => source.status === 'blocked').length
       const failed = result.sources.filter((source) => source.status === 'failed').length
-      console.log(
+      logger.log(
         `  Listings: ${result.listings.length}; stores found: ${found}; blocked: ${blocked}; failed: ${failed}`,
       )
     } catch (error) {
       sourceRuns.push({ query, error: error instanceof Error ? error.message : String(error) })
-      console.error(`  Query failed: ${error instanceof Error ? error.message : String(error)}`)
+      logger.error(`  Query failed: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -144,13 +145,13 @@ async function main() {
   await writeFile(csvPath, toCsv(rows), 'utf8')
   await writeFile(jsonPath, JSON.stringify(report, null, 2), 'utf8')
 
-  console.log(`\nSaved ${rows.length} unique listings:`)
-  console.log(`  CSV:  ${csvPath}`)
-  console.log(`  JSON: ${jsonPath}`)
-  console.log('Deal assessment: insufficient history; no discount claims are made.')
+  logger.log(`\nSaved ${rows.length} unique listings:`)
+  logger.log(`  CSV:  ${csvPath}`)
+  logger.log(`  JSON: ${jsonPath}`)
+  logger.log('Deal assessment: insufficient history; no discount claims are made.')
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error)
+  logger.error(error instanceof Error ? error.message : error)
   process.exitCode = 1
 })
