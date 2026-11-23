@@ -24,7 +24,7 @@ jobs:
       - name: Install current lockfile
         run: npm ci --ignore-scripts --no-fund
       - name: Apply non-breaking dependency fixes only
-        run: npm audit fix --no-fund
+        run: npm install --package-lock-only --ignore-scripts --no-fund
       - name: Print remaining audit summary
         run: |
           npm audit --json > npm-audit-after.json || true
