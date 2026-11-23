@@ -35,7 +35,7 @@ export function App() {
     <div className="page">
       <header className="top">
         <div>
-          <h1>Price Watch EG</h1>
+          <h1>EGYPT DEAL HUNTER</h1>
           <p>
             Watch a product across Egyptian shops. Get told live when it drops under your price or hits a
             30-day low.
