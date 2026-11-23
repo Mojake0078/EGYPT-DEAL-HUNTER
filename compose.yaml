@@ -1,4 +1,4 @@
-name: price-watch-eg
+name: egypt-deal-hunter
 
 x-node-service: &node-service
   restart: unless-stopped
@@ -56,7 +56,7 @@ services:
       context: .
       target: scraper
       args: { APP: scraper }
-    image: price-watch-scraper
+    image: egypt-deal-hunter-scraper
     environment:
       <<: *common-env
       SCRAPER_MODE: ${SCRAPER_MODE:-fake}
@@ -72,7 +72,7 @@ services:
       context: .
       target: service
       args: { APP: api }
-    image: price-watch-api
+    image: egypt-deal-hunter-api
     depends_on:
       postgres: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
@@ -94,7 +94,7 @@ services:
       context: .
       target: service
       args: { APP: checker }
-    image: price-watch-checker
+    image: egypt-deal-hunter-checker
     depends_on:
       rabbitmq: { condition: service_healthy }
       api: { condition: service_healthy }
@@ -115,7 +115,7 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-    image: price-watch-web
+    image: egypt-deal-hunter-web
     depends_on:
       api: { condition: service_healthy }
     ports:
