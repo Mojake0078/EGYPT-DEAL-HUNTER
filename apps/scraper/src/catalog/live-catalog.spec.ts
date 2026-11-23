@@ -82,4 +82,51 @@ describe('LiveCatalog', () => {
       concurrency: 2,
     })
   })
+
+  it('treats direct Jumia cards without an out-of-stock note as available, but keeps Pricena relays unknown', async () => {
+    const library: ScraperLibrary = {
+      searchAll: jest.fn().mockResolvedValue({
+        listings: [
+          {
+            source: 'jumia',
+            title: 'Mouse direct',
+            url: 'https://jumia.example/direct',
+            price: 500,
+            sold: null,
+            via: 'direct',
+          },
+          {
+            source: 'jumia',
+            title: 'Mouse Pricena',
+            url: 'https://jumia.example/pricena',
+            price: 510,
+            sold: null,
+            via: 'pricena',
+          },
+          {
+            source: 'jumia',
+            title: 'Mouse sold out',
+            url: 'https://jumia.example/oos',
+            price: 490,
+            sold: 'Out of stock',
+            via: 'direct',
+          },
+        ],
+        sources: [{ source: 'jumia', status: 'found' }],
+      }),
+    }
+    const results = []
+    for await (const item of new LiveCatalog(library, { shopTimeoutMs: 1000, shopConcurrency: 2 }).search(
+      'mouse',
+      ['jumia'],
+    )) {
+      results.push(item)
+    }
+
+    expect(results[0].offers.map((offer) => [offer.title, offer.stockStatus])).toEqual([
+      ['Mouse direct', 'STOCK_STATUS_IN_STOCK'],
+      ['Mouse Pricena', 'STOCK_STATUS_UNKNOWN'],
+      ['Mouse sold out', 'STOCK_STATUS_OUT_OF_STOCK'],
+    ])
+  })
 })
