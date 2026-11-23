@@ -29,6 +29,8 @@ jobs:
         run: |
           npm audit --json > npm-audit-after.json || true
           node -e "const r=require('./npm-audit-after.json'); console.log('REMAINING_VULNERABILITIES', JSON.stringify(r.metadata?.vulnerabilities ?? {})); for (const [name,v] of Object.entries(r.vulnerabilities ?? {})) console.log(name, v.severity, 'direct='+v.isDirect, 'fix='+JSON.stringify(v.fixAvailable));"
+      - name: Audit vendored scraper dependencies
+        run: npm audit --prefix libs/egypt-price-scraper
       - name: Validate updated lockfile
         run: |
           npm ci --ignore-scripts --no-fund
