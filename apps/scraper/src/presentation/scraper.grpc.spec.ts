@@ -1,13 +1,7 @@
 import { Test } from '@nestjs/testing'
 import { Transport, type MicroserviceOptions } from '@nestjs/microservices'
 import type { INestMicroservice } from '@nestjs/common'
-import {
-  credentials,
-  loadPackageDefinition,
-  Metadata,
-  status,
-  type ServiceError,
-} from '@grpc/grpc-js'
+import { credentials, loadPackageDefinition, Metadata, status, type ServiceError } from '@grpc/grpc-js'
 import { loadSync } from '@grpc/proto-loader'
 import {
   PROTO_LOADER_OPTIONS,
@@ -21,10 +15,7 @@ import { ScraperGrpcController } from './scraper.grpc-controller'
 
 interface ScraperStub {
   search(req: { query: string; shops: string[] }, metadata: Metadata): NodeJS.ReadableStream
-  health(
-    req: object,
-    cb: (err: ServiceError | null, reply: { status: string; mode: string }) => void,
-  ): void
+  health(req: object, cb: (err: ServiceError | null, reply: { status: string; mode: string }) => void): void
   close(): void
 }
 
@@ -52,10 +43,7 @@ describe('Scraper gRPC service (contract)', () => {
     const pkg = definition.pricewatch as unknown as {
       scraper: {
         v1: {
-          Scraper: new (
-            url: string,
-            creds: ReturnType<typeof credentials.createInsecure>,
-          ) => ScraperStub
+          Scraper: new (url: string, creds: ReturnType<typeof credentials.createInsecure>) => ScraperStub
         }
       }
     }
