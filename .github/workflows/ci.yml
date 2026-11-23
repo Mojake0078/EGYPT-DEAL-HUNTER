@@ -22,8 +22,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Print Prettier-formatted scraper adapter (temporary diagnostic)
-        run: npx prettier apps/scraper/src/catalog/live-catalog.ts
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
