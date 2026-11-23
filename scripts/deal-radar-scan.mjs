@@ -66,6 +66,44 @@ function toCsv(rows) {
   ].join('\n')
 }
 
+function summarizeShopHealth(shops, sourceRuns) {
+  const summary = {}
+
+  for (const shop of shops) {
+    const outcomes = []
+    for (const run of sourceRuns) {
+      for (const source of run.sources ?? []) {
+        if (source.source === shop) outcomes.push(source)
+      }
+    }
+
+    const count = (field, value) => outcomes.filter((source) => source[field] === value).length
+    summary[shop] = {
+      queries: outcomes.length,
+      listingsFound: outcomes.reduce((sum, source) => sum + (source.count ?? 0), 0),
+      effective: {
+        found: count('status', 'found'),
+        none: count('status', 'none'),
+        blocked: count('status', 'blocked'),
+        failed: count('status', 'failed'),
+      },
+      direct: {
+        found: count('directStatus', 'found'),
+        none: count('directStatus', 'none'),
+        blocked: count('directStatus', 'blocked'),
+        failed: count('directStatus', 'failed'),
+      },
+      pricenaFallback: {
+        found: count('fallbackStatus', 'found'),
+        none: count('fallbackStatus', 'none'),
+        failed: count('fallbackStatus', 'failed'),
+      },
+    }
+  }
+
+  return summary
+}
+
 async function main() {
   const requestedLimit = Number(process.env.DEAL_RADAR_QUERY_LIMIT ?? 3)
   if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
@@ -142,39 +180,7 @@ async function main() {
   const jsonPath = `reports/deal-radar-${stamp}.json`
   const completedAt = new Date().toISOString()
 
-  const shopHealth = Object.fromEntries(
-    SHOPS.map((shop) => {
-      const outcomes = sourceRuns
-        .flatMap((run) => run.sources ?? [])
-        .filter((source) => source.source === shop)
-      const count = (field, value) =>
-        outcomes.filter((source) => source[field] === value).length
-      return [
-        shop,
-        {
-          queries: outcomes.length,
-          listingsFound: outcomes.reduce((sum, source) => sum + (source.count ?? 0), 0),
-          effective: {
-            found: count('status', 'found'),
-            none: count('status', 'none'),
-            blocked: count('status', 'blocked'),
-            failed: count('status', 'failed'),
-          },
-          direct: {
-            found: count('directStatus', 'found'),
-            none: count('directStatus', 'none'),
-            blocked: count('directStatus', 'blocked'),
-            failed: count('directStatus', 'failed'),
-          },
-          pricenaFallback: {
-            found: count('fallbackStatus', 'found'),
-            none: count('fallbackStatus', 'none'),
-            failed: count('fallbackStatus', 'failed'),
-          },
-        },
-      ]
-    }),
-  )
+  const shopHealth = summarizeShopHealth(SHOPS, sourceRuns)
 
   const report = {
     project: 'EGYPT DEAL HUNTER',
