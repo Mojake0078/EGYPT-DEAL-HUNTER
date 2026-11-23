@@ -14,6 +14,7 @@ on:
       - 'scripts/deal-radar-scan.mjs'
       - 'libs/egypt-price-scraper/**'
       - 'package.json'
+      - 'package-lock.json'
 
 permissions:
   contents: read
