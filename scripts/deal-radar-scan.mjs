@@ -37,9 +37,9 @@ function stockStatus(listing) {
 }
 
 function conditionStatus(title) {
-  if (/\\b(refurbished|renewed|reconditioned)\\b/i.test(title)) return 'REFURBISHED'
-  if (/\\b(used|pre-owned|second hand)\\b/i.test(title)) return 'USED'
-  if (/\\b(open box|open-box)\\b/i.test(title)) return 'OPEN_BOX'
+  if (/\b(refurbished|renewed|reconditioned)\b/i.test(title)) return 'REFURBISHED'
+  if (/\b(used|pre-owned|second hand)\b/i.test(title)) return 'USED'
+  if (/\b(open box|open-box)\b/i.test(title)) return 'OPEN_BOX'
   return 'UNSPECIFIED'
 }
 
@@ -90,7 +90,7 @@ async function main() {
       })
 
       sourceRuns.push({ query, sources: result.sources })
-      const hasCapacity = /\\b\\d+(?:\\.\\d+)?\\s?(?:gb|tb)\\b/i.test(query)
+      const hasCapacity = /\b\d+(?:\.\d+)?\\s?(?:gb|tb)\b/i.test(query)
       const preciseListings = result.listings.filter(
         (listing) => !hasCapacity || sameModel(listing.title, query),
       )
