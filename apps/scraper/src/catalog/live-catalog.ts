@@ -90,8 +90,7 @@ export class LiveCatalog implements ShopCatalog {
           // The pinned Jumia parser marks explicit OOS cards as "Out of stock".
           // A direct Jumia card with no sold note is therefore available; Pricena
           // relays stay UNKNOWN because their stock note is not authoritative.
-          const sold =
-            l.source === 'jumia' && l.via === 'direct' && l.sold === null ? 'In Stock' : l.sold
+          const sold = l.source === 'jumia' && l.via === 'direct' && l.sold === null ? 'In Stock' : l.sold
           const stockStatus = classifyStock(sold)
           return {
             shop: l.source,
@@ -102,12 +101,7 @@ export class LiveCatalog implements ShopCatalog {
             inStock: stockStatus === 'STOCK_STATUS_IN_STOCK',
           }
         })
-      yield {
-        shop: outcome.source,
-        status: STATUS[outcome.status],
-        offers,
-        error: outcome.error ?? '',
-      }
+      yield { shop: outcome.source, status: STATUS[outcome.status], offers, error: outcome.error ?? '' }
     }
   }
 }
