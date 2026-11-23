@@ -71,7 +71,9 @@ export class DealRadarSchema1763900000000 implements MigrationInterface {
         observed_at timestamptz NOT NULL,
         UNIQUE (listing_id, discovery_run_id)
       )`)
-    await q.query(`CREATE INDEX ix_deal_snapshots_listing_time ON deal_price_snapshots (listing_id, observed_at DESC)`)
+    await q.query(
+      `CREATE INDEX ix_deal_snapshots_listing_time ON deal_price_snapshots (listing_id, observed_at DESC)`,
+    )
     await q.query(`
       CREATE TABLE deal_candidates (
         id uuid PRIMARY KEY,
