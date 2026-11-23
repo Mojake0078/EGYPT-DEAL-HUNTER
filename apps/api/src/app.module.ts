@@ -18,6 +18,7 @@ import { EventSubscriptions } from './watches/infrastructure/messaging/event-sub
 import { OutboxRelay } from './watches/infrastructure/messaging/outbox-relay'
 import { ClaimableChecks1763800000000 } from './watches/infrastructure/persistence/claimable-checks.migration'
 import { DemoSeeder } from './watches/infrastructure/persistence/demo-seeder'
+import { DealRadarSchema1763900000000 } from './watches/infrastructure/persistence/deal-radar-schema.migration'
 import { InitialSchema1763700000000 } from './watches/infrastructure/persistence/initial-schema.migration'
 import { ENTITIES } from './watches/infrastructure/persistence/schema'
 import { DATA_SOURCE, TypeOrmUnitOfWork } from './watches/infrastructure/persistence/typeorm-unit-of-work'
@@ -53,7 +54,7 @@ class Connections implements OnApplicationShutdown {
           type: 'postgres',
           url: config.databaseUrl,
           entities: ENTITIES,
-          migrations: [InitialSchema1763700000000, ClaimableChecks1763800000000],
+          migrations: [InitialSchema1763700000000, ClaimableChecks1763800000000, DealRadarSchema1763900000000],
           migrationsRun: true,
         }).initialize(),
     },
