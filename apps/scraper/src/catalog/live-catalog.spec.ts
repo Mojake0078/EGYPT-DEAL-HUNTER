@@ -22,7 +22,7 @@ describe('LiveCatalog', () => {
           { source: 'noon', title: 'Mouse A', url: 'https://example.com/a', price: 899.5, sold: null },
           { source: 'noon', title: 'Mouse B', url: 'https://example.com/b', price: null, sold: null },
           {
-            source: 'btech',
+            source: 'jumia',
             title: 'Mouse C',
             url: 'https://example.com/c',
             price: 950,
@@ -31,7 +31,7 @@ describe('LiveCatalog', () => {
         ],
         sources: [
           { source: 'noon', status: 'found' },
-          { source: 'btech', status: 'found' },
+          { source: 'jumia', status: 'found' },
           { source: 'amazon', status: 'blocked', error: 'HTTP 403' },
         ],
       }),
@@ -60,12 +60,12 @@ describe('LiveCatalog', () => {
         ],
       },
       {
-        shop: 'btech',
+        shop: 'jumia',
         status: 'SHOP_STATUS_FOUND',
         error: '',
         offers: [
           {
-            shop: 'btech',
+            shop: 'jumia',
             title: 'Mouse C',
             pricePiastres: 95_000,
             url: 'https://example.com/c',
@@ -77,7 +77,7 @@ describe('LiveCatalog', () => {
       { shop: 'amazon', status: 'SHOP_STATUS_BLOCKED', error: 'HTTP 403', offers: [] },
     ])
     expect(library.searchAll).toHaveBeenCalledWith('mouse', {
-      shops: undefined,
+      shops: ['amazon', 'jumia', 'noon'],
       timeoutMs: 1000,
       concurrency: 2,
     })
@@ -123,6 +123,7 @@ describe('LiveCatalog', () => {
       results.push(item)
     }
 
+    expect(library.searchAll).toHaveBeenCalledWith('mouse', { shops: ['jumia'], timeoutMs: 1000, concurrency: 2 })
     expect(results[0].offers.map((offer) => [offer.title, offer.stockStatus])).toEqual([
       ['Mouse direct', 'STOCK_STATUS_IN_STOCK'],
       ['Mouse Pricena', 'STOCK_STATUS_UNKNOWN'],
