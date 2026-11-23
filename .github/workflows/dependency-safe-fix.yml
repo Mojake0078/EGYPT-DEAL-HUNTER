@@ -2,6 +2,10 @@ name: dependency-safe-fix
 
 on:
   workflow_dispatch:
+  push:
+    branches: [fix/stock-status-and-matching]
+    paths:
+      - '.github/workflows/dependency-safe-fix.yml'
 
 permissions:
   contents: write
