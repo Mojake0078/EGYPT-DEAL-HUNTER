@@ -18,3 +18,5 @@ jobs:
       - run: npm ci
       - run: npx prettier --write apps/scraper/src/presentation/scraper.grpc.spec.ts
       - run: git diff -- apps/scraper/src/presentation/scraper.grpc.spec.ts
+
+# Trigger formatter diagnostic after workflow registration.
