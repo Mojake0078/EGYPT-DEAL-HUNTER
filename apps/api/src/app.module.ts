@@ -54,7 +54,11 @@ class Connections implements OnApplicationShutdown {
           type: 'postgres',
           url: config.databaseUrl,
           entities: ENTITIES,
-          migrations: [InitialSchema1763700000000, ClaimableChecks1763800000000, DealRadarSchema1763900000000],
+          migrations: [
+            InitialSchema1763700000000,
+            ClaimableChecks1763800000000,
+            DealRadarSchema1763900000000,
+          ],
           migrationsRun: true,
         }).initialize(),
     },
