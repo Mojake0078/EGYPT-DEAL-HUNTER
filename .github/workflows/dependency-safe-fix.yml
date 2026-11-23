@@ -21,9 +21,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Install current lockfile
-        run: npm ci --ignore-scripts --no-fund
-      - name: Apply non-breaking dependency fixes only
+      - name: Refresh lockfile for patched dependency ranges
         run: npm install --package-lock-only --ignore-scripts --no-fund
       - name: Print remaining audit summary
         run: |
