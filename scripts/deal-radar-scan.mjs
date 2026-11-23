@@ -1,4 +1,6 @@
+import { console } from 'node:console'
 import { mkdir, writeFile } from 'node:fs/promises'
+import process from 'node:process'
 import { searchAll } from '../libs/egypt-price-scraper/dist/index.js'
 
 const SHOPS = ['amazon', 'jumia', 'noon']
