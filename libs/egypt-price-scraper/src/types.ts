@@ -32,7 +32,11 @@ export interface SourceOutcome {
   status: SourceStatus
   via: 'direct' | 'pricena'
   count: number
-  /** Why it failed or was blocked. */
+  /** Outcome of the retailer's own endpoint, independent of fallback results. */
+  directStatus?: SourceStatus
+  /** Outcome of the Pricena fallback for this retailer, when enabled. */
+  fallbackStatus?: SourceStatus
+  /** Why the effective source failed or was blocked. */
   error?: string
 }
 
