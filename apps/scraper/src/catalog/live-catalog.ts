@@ -2,7 +2,7 @@ import type { ShopResultMessage, StockStatusMessage } from '@price-watch/contrac
 import { toPiastres, type ShopCatalog } from './shop-catalog'
 
 /**
- * The subset of the `egypt-price-scraper` library this sidecar uses.
+ * The subset of the local `egypt-price-scraper` library this sidecar uses.
  * The library's `sold` field is not a reliable stock boolean: it may contain sales counts or be null.
  */
 interface ScraperListing {
@@ -40,20 +40,22 @@ const STATUS: Record<ScraperSourceOutcome['status'], ShopResultMessage['status']
  * Sales counts, nulls, unfamiliar text and ambiguous labels remain UNKNOWN.
  */
 export function classifyStock(sold: string | null): StockStatusMessage {
-  const value = sold?.trim().toLowerCase().replace(/\\s+/g, ' ')
+  const value = sold?.trim().toLowerCase().replace(/\s+/g, ' ')
   if (!value) return 'STOCK_STATUS_UNKNOWN'
   if (/^(out of stock|currently unavailable|unavailable|sold out)$/.test(value))
     return 'STOCK_STATUS_OUT_OF_STOCK'
   if (
-    /^(in stock|available|available now|add to cart|only \\d+ left in stock)$/.test(value) ||
-    /^only \\d+ left$/.test(value)
+    /^(in stock|available|available now|add to cart|only \d+ left in stock)$/.test(value) ||
+    /^only \d+ left$/.test(value)
   )
     return 'STOCK_STATUS_IN_STOCK'
   return 'STOCK_STATUS_UNKNOWN'
 }
 
-/** Loads the ESM-only library from CommonJS (TypeScript keeps this a real dynamic import under node16). */
-export async function loadScraperLibrary(specifier = 'egypt-price-scraper'): Promise<ScraperLibrary> {
+/** Loads the vendored ESM library with a real dynamic import under node16 module resolution. */
+export async function loadScraperLibrary(
+  specifier = '../../../../libs/egypt-price-scraper/dist/index.js',
+): Promise<ScraperLibrary> {
   const mod = (await import(specifier)) as ScraperLibrary
   if (typeof mod.searchAll !== 'function') throw new Error(`${specifier} does not export searchAll`)
   return mod
@@ -66,7 +68,7 @@ export interface LiveCatalogOptions {
   shopConcurrency: number
 }
 
-/** Real searches through egypt-price-scraper. Reports every searched shop, including failures. */
+/** Real searches through the local egypt-price-scraper library. Reports every searched shop, including failures. */
 export class LiveCatalog implements ShopCatalog {
   readonly mode = 'live' as const
 
@@ -100,7 +102,12 @@ export class LiveCatalog implements ShopCatalog {
             inStock: stockStatus === 'STOCK_STATUS_IN_STOCK',
           }
         })
-      yield { shop: outcome.source, status: STATUS[outcome.status], offers, error: outcome.error ?? '' }
+      yield {
+        shop: outcome.source,
+        status: STATUS[outcome.status],
+        offers,
+        error: outcome.error ?? '',
+      }
     }
   }
 }
