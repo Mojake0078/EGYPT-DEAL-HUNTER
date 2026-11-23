@@ -86,9 +86,7 @@ describe('Scraper gRPC service (contract)', () => {
       'title',
       'url',
     ])
-    expect(['STOCK_STATUS_IN_STOCK', 'STOCK_STATUS_OUT_OF_STOCK']).toContain(
-      sample?.offers[0]?.stockStatus,
-    )
+    expect(['STOCK_STATUS_IN_STOCK', 'STOCK_STATUS_OUT_OF_STOCK']).toContain(sample?.offers[0]?.stockStatus)
     expect(typeof sample?.offers[0]?.pricePiastres).toBe('number')
   })
 
