@@ -24,7 +24,8 @@
     "test:integration": "jest --selectProjects integration --runInBand",
     "test:all": "jest --runInBand && npm run test:web && npm ci --prefix libs/egypt-price-scraper --no-audit --no-fund && npm test --prefix libs/egypt-price-scraper",
     "test:web": "npm test -w @price-watch/web",
-    "smoke": "bash scripts/smoke.sh"
+    "smoke": "bash scripts/smoke.sh",
+    "deal-radar:scan": "npm ci --prefix libs/egypt-price-scraper --no-audit --no-fund && npm run build --prefix libs/egypt-price-scraper && node scripts/deal-radar-scan.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
