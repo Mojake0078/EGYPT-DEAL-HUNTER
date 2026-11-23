@@ -59,7 +59,7 @@ function toCsv(rows) {
 }
 
 async function main() {
-  const requestedLimit = Number(process.env.DEAL_RADAR_QUERY_LIMIT ?? SEED_QUERIES.length)
+  const requestedLimit = Number(process.env.DEAL_RADAR_QUERY_LIMIT ?? 3)
   if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
     throw new Error('DEAL_RADAR_QUERY_LIMIT must be a positive integer')
   }
