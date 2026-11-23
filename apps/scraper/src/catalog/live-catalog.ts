@@ -28,6 +28,9 @@ export interface ScraperLibrary {
   ): Promise<{ listings: ScraperListing[]; sources: ScraperSourceOutcome[] }>
 }
 
+/** Only these stores are enabled in phase one. The vendored library keeps its other adapters for later phases. */
+export const PHASE_ONE_SHOPS = ['amazon', 'jumia', 'noon'] as const
+
 const STATUS: Record<ScraperSourceOutcome['status'], ShopResultMessage['status']> = {
   found: 'SHOP_STATUS_FOUND',
   none: 'SHOP_STATUS_NONE',
@@ -78,8 +81,10 @@ export class LiveCatalog implements ShopCatalog {
   ) {}
 
   async *search(query: string, shops: string[]): AsyncIterable<ShopResultMessage> {
+    // Do not let an old watch or an API caller accidentally activate stores outside phase one.
+    const selectedShops = PHASE_ONE_SHOPS.filter((shop) => shops.length === 0 || shops.includes(shop))
     const result = await this.library.searchAll(query, {
-      shops: shops.length ? shops : undefined,
+      shops: [...selectedShops],
       timeoutMs: this.options.shopTimeoutMs,
       concurrency: this.options.shopConcurrency,
     })
