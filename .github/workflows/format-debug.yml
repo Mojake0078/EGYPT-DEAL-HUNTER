@@ -1,0 +1,20 @@
+name: format-debug
+on:
+  push:
+    branches: [fix/stock-status-and-matching]
+    paths:
+      - '.github/workflows/format-debug.yml'
+permissions:
+  contents: read
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write apps/scraper/src/presentation/scraper.grpc.spec.ts
+      - run: git diff -- apps/scraper/src/presentation/scraper.grpc.spec.ts
