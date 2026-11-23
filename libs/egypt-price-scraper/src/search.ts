@@ -116,18 +116,39 @@ export async function searchAll(query: string, opts: SearchOptions = {}): Promis
 
   const sources: SourceOutcome[] = selected.map(s => {
     const mine = listings.filter(l => l.source === s.id)
+    const directMine = directMatched.filter(l => l.source === s.id)
+    const fallbackMine = fromPricena.filter(l => l.source === s.id)
     const r = byShop.get(s.id)
-    if (mine.length) return { source: s.id, store: s.name, status: 'found', via: mine.some(l => l.via !== 'pricena') ? 'direct' : 'pricena', count: mine.length }
+    const directStatus: SourceOutcome['directStatus'] = !r
+      ? undefined
+      : !r.ok
+        ? r.error instanceof BlockedError ? 'blocked' : 'failed'
+        : directMine.length ? 'found' : 'none'
+    const fallbackStatus: SourceOutcome['fallbackStatus'] = !usePricena
+      ? undefined
+      : !pricena
+        ? undefined
+        : !pricena.ok
+          ? 'failed'
+          : fallbackMine.length ? 'found' : 'none'
+    const via = mine.some(l => l.via !== 'pricena') ? 'direct' : 'pricena'
+    if (mine.length) {
+      return {
+        source: s.id, store: s.name, status: 'found', via, count: mine.length,
+        directStatus, fallbackStatus,
+        ...(r && !r.ok ? { error: errText(r.error) } : {}),
+      }
+    }
     if (r && !r.ok) {
-      const status = r.error instanceof BlockedError ? 'blocked' : 'failed'
-      return { source: s.id, store: s.name, status, via: 'direct', count: 0, error: errText(r.error) }
+      const status = directStatus!
+      return { source: s.id, store: s.name, status, via: 'direct', count: 0, directStatus, fallbackStatus, error: errText(r.error) }
     }
     if (!r) {
       // Pricena-only shop.
-      if (pricena && !pricena.ok) return { source: s.id, store: s.name, status: 'failed', via: 'pricena', count: 0, error: errText(pricena.error) }
-      return { source: s.id, store: s.name, status: 'none', via: 'pricena', count: 0 }
+      if (pricena && !pricena.ok) return { source: s.id, store: s.name, status: 'failed', via: 'pricena', count: 0, fallbackStatus, error: errText(pricena.error) }
+      return { source: s.id, store: s.name, status: 'none', via: 'pricena', count: 0, fallbackStatus }
     }
-    return { source: s.id, store: s.name, status: 'none', via: 'direct', count: 0 }
+    return { source: s.id, store: s.name, status: 'none', via: 'direct', count: 0, directStatus, fallbackStatus }
   })
   // Shops Pricena relayed that aren't in the registry.
   for (const l of listings) {
