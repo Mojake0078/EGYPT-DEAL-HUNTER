@@ -1,4 +1,18 @@
-import { LiveCatalog, type ScraperLibrary } from './live-catalog'
+import { LiveCatalog, classifyStock, type ScraperLibrary } from './live-catalog'
+
+describe('classifyStock', () => {
+  it.each([
+    [null, 'STOCK_STATUS_UNKNOWN'],
+    ['23 bought in the past month', 'STOCK_STATUS_UNKNOWN'],
+    ['ships from seller', 'STOCK_STATUS_UNKNOWN'],
+    ['In Stock', 'STOCK_STATUS_IN_STOCK'],
+    ['Only 2 left in stock', 'STOCK_STATUS_IN_STOCK'],
+    ['Out of stock', 'STOCK_STATUS_OUT_OF_STOCK'],
+    ['Currently unavailable', 'STOCK_STATUS_OUT_OF_STOCK'],
+  ])('classifies %s conservatively', (value, expected) => {
+    expect(classifyStock(value)).toBe(expected)
+  })
+})
 
 describe('LiveCatalog', () => {
   it('maps the library result to one shop result per searched shop, skipping unpriced listings', async () => {
@@ -8,7 +22,7 @@ describe('LiveCatalog', () => {
           { source: 'noon', title: 'Mouse A', url: 'https://example.com/a', price: 899.5, sold: null },
           { source: 'noon', title: 'Mouse B', url: 'https://example.com/b', price: null, sold: null },
           {
-            source: 'btech',
+            source: 'jumia',
             title: 'Mouse C',
             url: 'https://example.com/c',
             price: 950,
@@ -17,7 +31,7 @@ describe('LiveCatalog', () => {
         ],
         sources: [
           { source: 'noon', status: 'found' },
-          { source: 'btech', status: 'found' },
+          { source: 'jumia', status: 'found' },
           { source: 'amazon', status: 'blocked', error: 'HTTP 403' },
         ],
       }),
@@ -40,20 +54,22 @@ describe('LiveCatalog', () => {
             title: 'Mouse A',
             pricePiastres: 89_950,
             url: 'https://example.com/a',
-            inStock: true,
+            stockStatus: 'STOCK_STATUS_UNKNOWN',
+            inStock: false,
           },
         ],
       },
       {
-        shop: 'btech',
+        shop: 'jumia',
         status: 'SHOP_STATUS_FOUND',
         error: '',
         offers: [
           {
-            shop: 'btech',
+            shop: 'jumia',
             title: 'Mouse C',
             pricePiastres: 95_000,
             url: 'https://example.com/c',
+            stockStatus: 'STOCK_STATUS_OUT_OF_STOCK',
             inStock: false,
           },
         ],
@@ -61,9 +77,61 @@ describe('LiveCatalog', () => {
       { shop: 'amazon', status: 'SHOP_STATUS_BLOCKED', error: 'HTTP 403', offers: [] },
     ])
     expect(library.searchAll).toHaveBeenCalledWith('mouse', {
-      shops: undefined,
+      shops: ['amazon', 'jumia', 'noon'],
       timeoutMs: 1000,
       concurrency: 2,
     })
+  })
+
+  it('treats direct Jumia cards without an out-of-stock note as available, but keeps Pricena relays unknown', async () => {
+    const library: ScraperLibrary = {
+      searchAll: jest.fn().mockResolvedValue({
+        listings: [
+          {
+            source: 'jumia',
+            title: 'Mouse direct',
+            url: 'https://jumia.example/direct',
+            price: 500,
+            sold: null,
+            via: 'direct',
+          },
+          {
+            source: 'jumia',
+            title: 'Mouse Pricena',
+            url: 'https://jumia.example/pricena',
+            price: 510,
+            sold: null,
+            via: 'pricena',
+          },
+          {
+            source: 'jumia',
+            title: 'Mouse sold out',
+            url: 'https://jumia.example/oos',
+            price: 490,
+            sold: 'Out of stock',
+            via: 'direct',
+          },
+        ],
+        sources: [{ source: 'jumia', status: 'found' }],
+      }),
+    }
+    const results = []
+    for await (const item of new LiveCatalog(library, { shopTimeoutMs: 1000, shopConcurrency: 2 }).search(
+      'mouse',
+      ['jumia'],
+    )) {
+      results.push(item)
+    }
+
+    expect(library.searchAll).toHaveBeenCalledWith('mouse', {
+      shops: ['jumia'],
+      timeoutMs: 1000,
+      concurrency: 2,
+    })
+    expect(results[0].offers.map((offer) => [offer.title, offer.stockStatus])).toEqual([
+      ['Mouse direct', 'STOCK_STATUS_IN_STOCK'],
+      ['Mouse Pricena', 'STOCK_STATUS_UNKNOWN'],
+      ['Mouse sold out', 'STOCK_STATUS_OUT_OF_STOCK'],
+    ])
   })
 })

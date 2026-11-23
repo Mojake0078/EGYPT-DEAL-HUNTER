@@ -25,12 +25,12 @@ export class UpdateWatchDto {
   active?: boolean
 }
 
-/** REST speaks EGP (what people type and read); the domain keeps integer piastres. */
 export interface OfferJson {
   shop: string
   title: string
   priceEgp: number
   url: string
+  stockStatus: 'in_stock' | 'out_of_stock' | 'unknown'
   inStock: boolean
 }
 
@@ -58,7 +58,13 @@ export interface HistoryPointJson {
 export function offerJson(offer: Offer | null): OfferJson | null {
   if (!offer) return null
   const { pricePiastres, ...rest } = offer
-  return { ...rest, priceEgp: piastresToEgp(pricePiastres) }
+  const stockStatus = offer.stockStatus ?? (offer.inStock ? 'in_stock' : 'unknown')
+  return {
+    ...rest,
+    stockStatus,
+    inStock: stockStatus === 'in_stock',
+    priceEgp: piastresToEgp(pricePiastres),
+  }
 }
 
 export function watchJson(view: WatchView): WatchJson {

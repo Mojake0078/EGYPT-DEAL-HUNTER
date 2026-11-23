@@ -15,11 +15,13 @@ export const PROTO_LOADER_OPTIONS = {
   oneofs: true,
 } as const
 
-/** Wire shapes of the proto messages as decoded with PROTO_LOADER_OPTIONS (checked by a contract test). */
 export interface SearchRequestMessage {
   query: string
   shops: string[]
 }
+
+export type StockStatusMessage =
+  'STOCK_STATUS_UNSPECIFIED' | 'STOCK_STATUS_IN_STOCK' | 'STOCK_STATUS_OUT_OF_STOCK' | 'STOCK_STATUS_UNKNOWN'
 
 export interface OfferMessage {
   shop: string
@@ -27,6 +29,8 @@ export interface OfferMessage {
   pricePiastres: number
   url: string
   inStock: boolean
+  /** Optional for compatibility with older sidecars; new sidecars always send it. */
+  stockStatus?: StockStatusMessage
 }
 
 export type ShopStatusMessage =

@@ -1,0 +1,51 @@
+name: Deal Radar live scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      query_limit:
+        description: Number of starter product searches (1-10)
+        required: false
+        default: '3'
+  push:
+    branches: [fix/stock-status-and-matching]
+    paths:
+      - '.github/workflows/deal-radar-scan.yml'
+      - 'scripts/deal-radar-scan.mjs'
+      - 'libs/egypt-price-scraper/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+jobs:
+  live-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run one-shot live discovery
+        env:
+          DEAL_RADAR_QUERY_LIMIT: ${{ github.event.inputs.query_limit || '3' }}
+        run: npm run deal-radar:scan
+
+      - name: Upload CSV and JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: egypt-deal-hunter-live-report
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 14

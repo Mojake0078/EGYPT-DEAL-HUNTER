@@ -13,7 +13,7 @@ const DEMO = [
   { query: 'Kindle Paperwhite', targetEgp: 7900, baseEgp: 8800 },
   { query: 'Redmi Note 13', targetEgp: 9500, baseEgp: 10_500 },
 ]
-const SHOPS = ['amazon', 'noon', 'jumia', 'btech', '2b', 'raya']
+const SHOPS = ['amazon', 'jumia', 'noon']
 const DAY_MS = 86_400_000
 
 /** Dev/demo only (DEMO_DATA=true): seeds three watches with 30 days of synthetic daily history into an empty DB. */

@@ -1,0 +1,3 @@
+# Public product URL slugs in upstream HTML/JSON fixtures; Gitleaks generic-api-key false positives.
+ae0560d64ba28f8e9622e5f249c9aa4d9c139559:libs/egypt-price-scraper/test/fixtures/homzmart-search.html:generic-api-key:2
+ae0560d64ba28f8e9622e5f249c9aa4d9c139559:libs/egypt-price-scraper/test/fixtures/raya-graphql.json:generic-api-key:22

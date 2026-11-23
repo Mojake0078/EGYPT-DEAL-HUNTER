@@ -1,11 +1,12 @@
+export type StockStatus = 'in_stock' | 'out_of_stock' | 'unknown'
 export interface Offer {
   shop: string
   title: string
   priceEgp: number
   url: string
+  stockStatus?: StockStatus
   inStock: boolean
 }
-
 export interface Watch {
   id: string
   query: string
@@ -16,7 +17,6 @@ export interface Watch {
   latest: { observedAt: string; healthy: boolean; lowest: Offer | null } | null
   lowest30dEgp: number | null
 }
-
 export interface HistoryPoint {
   checkId: string
   observedAt: string
@@ -26,8 +26,6 @@ export interface HistoryPoint {
   dropReasons: string[]
   shops: Array<{ shop: string; status: string; error?: string }>
 }
-
-/** PriceDropped as pushed over the `/prices` socket (amounts in piastres, like on the bus). */
 export interface PriceDroppedEvent {
   alertKey: string
   watchId: string
@@ -39,7 +37,6 @@ export interface PriceDroppedEvent {
   reasons: Array<'below-target' | 'thirty-day-low'>
   observedAt: string
 }
-
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
@@ -51,7 +48,6 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   }
   return response.status === 204 ? (undefined as T) : ((await response.json()) as T)
 }
-
 export const api = {
   list: () => call<Watch[]>('/api/watches'),
   create: (query: string, targetEgp: number) =>

@@ -16,6 +16,11 @@ RUN npm ci --no-audit --no-fund --ignore-scripts -w @price-watch/contracts -w @p
 COPY libs libs
 COPY apps/${APP} apps/${APP}
 RUN npm run build -w @price-watch/contracts -w @price-watch/platform -w @price-watch/${APP}
+# Build the vendored scraper library from this repository; no external git clone is needed.
+RUN if [ "${APP}" = "scraper" ]; then \
+      npm ci --prefix libs/egypt-price-scraper --no-audit --no-fund \
+      && npm run build --prefix libs/egypt-price-scraper; \
+    fi
 
 FROM ${NODE_IMAGE} AS deps
 ARG APP
@@ -27,14 +32,6 @@ COPY --from=build /repo/apps apps
 RUN npm ci --no-audit --no-fund --ignore-scripts --omit=dev -w @price-watch/contracts -w @price-watch/platform -w @price-watch/${APP} \
       --include-workspace-root=false \
  && mkdir -p apps/${APP}/node_modules
-
-# The real scraper library, pinned: cloned from its public repo at a fixed commit and built (it is not on npm).
-FROM ${NODE_IMAGE} AS scraper-lib
-ARG SCRAPER_LIB_COMMIT=f7bfb67f02be5466ab91cc337386129c5ab71b89
-RUN apk add --no-cache git
-WORKDIR /opt/egypt-price-scraper
-RUN git clone https://github.com/ahmedoshelmy/egypt-price-scraper.git . && git checkout ${SCRAPER_LIB_COMMIT} \
- && npm ci --no-audit --no-fund && npm run build && npm prune --omit=dev
 
 FROM ${NODE_IMAGE} AS service
 ARG APP
@@ -55,5 +52,10 @@ USER node
 CMD ["node", "dist/main.js"]
 
 FROM service AS scraper
-COPY --from=scraper-lib /opt/egypt-price-scraper/package.json /repo/node_modules/egypt-price-scraper/package.json
-COPY --from=scraper-lib /opt/egypt-price-scraper/dist /repo/node_modules/egypt-price-scraper/dist
+# Amazon.eg's bot checks require curl; the vendored scraper falls back to Node fetch when curl is absent.
+USER root
+RUN apk add --no-cache curl
+USER node
+# The runtime module resolves this repository-local package by relative path.
+COPY --from=build /repo/libs/egypt-price-scraper/package.json /repo/libs/egypt-price-scraper/package.json
+COPY --from=build /repo/libs/egypt-price-scraper/dist /repo/libs/egypt-price-scraper/dist

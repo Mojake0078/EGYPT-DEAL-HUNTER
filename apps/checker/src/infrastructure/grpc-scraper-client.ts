@@ -14,6 +14,7 @@ import {
   type ShopOutcomeDto,
   type ShopResultMessage,
   type ShopStatusName,
+  type StockStatusName,
 } from '@price-watch/contracts'
 import type { ScrapeResult, ScraperClient } from '../application/ports'
 
@@ -36,10 +37,32 @@ const STATUS: Record<ShopResultMessage['status'], ShopStatusName> = {
   SHOP_STATUS_BLOCKED: 'blocked',
 }
 
-/**
- * gRPC adapter. The deadline travels with the call (grpc-timeout header), so the sidecar can stop work the
- * caller no longer waits for; results streamed before the deadline are kept as a partial check.
- */
+const STOCK_STATUS: Record<string, StockStatusName> = {
+  STOCK_STATUS_IN_STOCK: 'in_stock',
+  STOCK_STATUS_OUT_OF_STOCK: 'out_of_stock',
+  STOCK_STATUS_UNKNOWN: 'unknown',
+  STOCK_STATUS_UNSPECIFIED: 'unknown',
+}
+
+function mapOffer(offer: ShopResultMessage['offers'][number]): OfferDto {
+  const mapped = STOCK_STATUS[offer.stockStatus ?? 'STOCK_STATUS_UNSPECIFIED'] ?? 'unknown'
+  // Old sidecars only supplied in_stock; preserve that behavior during a rolling upgrade.
+  const stockStatus =
+    (offer.stockStatus === undefined || offer.stockStatus === 'STOCK_STATUS_UNSPECIFIED') && offer.inStock
+      ? 'in_stock'
+      : mapped
+
+  return {
+    shop: offer.shop,
+    title: offer.title,
+    pricePiastres: offer.pricePiastres,
+    url: offer.url,
+    stockStatus,
+    inStock: stockStatus === 'in_stock',
+  }
+}
+
+/** gRPC adapter. Partial results received before the deadline are retained. */
 export class GrpcScraperClient implements ScraperClient {
   private readonly stub: ScraperStub
 
@@ -65,7 +88,7 @@ export class GrpcScraperClient implements ScraperClient {
           status: STATUS[result.status],
           ...(result.error ? { error: result.error } : {}),
         })
-        offers.push(...result.offers)
+        offers.push(...result.offers.map(mapOffer))
       })
       call.on('end', () => resolve({ offers, shops }))
       call.on('error', (err: ServiceError) =>

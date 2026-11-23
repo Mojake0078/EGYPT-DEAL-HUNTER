@@ -1,0 +1,56 @@
+name: dependency-audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix/stock-status-and-matching]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'libs/egypt-price-scraper/package.json'
+      - 'libs/egypt-price-scraper/package-lock.json'
+      - '.github/workflows/dependency-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-fund
+      - name: Generate npm audit report
+        run: |
+          npm audit --json > npm-audit.json || true
+          node <<'NODE'
+          const fs = require('node:fs');
+          const report = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
+          const meta = report.metadata?.vulnerabilities ?? {};
+          console.log('AUDIT_TOTALS', JSON.stringify(meta));
+          for (const [name, item] of Object.entries(report.vulnerabilities ?? {})) {
+            console.log('AUDIT_ITEM', JSON.stringify({
+              name,
+              severity: item.severity,
+              isDirect: item.isDirect,
+              range: item.range,
+              fixAvailable: item.fixAvailable,
+              via: item.via.map(v => typeof v === 'string' ? v : {
+                title: v.title,
+                url: v.url,
+                range: v.range
+              })
+            }));
+          }
+          NODE
+      - name: Upload full audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: egypt-deal-hunter-npm-audit
+          path: npm-audit.json
+          retention-days: 14

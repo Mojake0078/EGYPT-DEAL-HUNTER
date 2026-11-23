@@ -1,7 +1,7 @@
 {
-  "name": "price-watch-eg",
+  "name": "egypt-deal-hunter",
   "private": true,
-  "description": "Watch products across Egyptian online shops, keep price history and get live drop alerts.",
+  "description": "Discover genuine deals across Amazon Egypt, Jumia and Noon, compare prices and track savings.",
   "license": "MIT",
   "engines": {
     "node": ">=22"
@@ -15,16 +15,17 @@
     "apps/web"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run build -w @price-watch/contracts -w @price-watch/platform && npm run typecheck --workspaces --if-present && tsc -p tests/tsconfig.json",
+    "build": "npm ci --prefix libs/egypt-price-scraper --no-audit --no-fund && npm run build --prefix libs/egypt-price-scraper && npm run build --workspaces --if-present",
+    "typecheck": "npm ci --prefix libs/egypt-price-scraper --no-audit --no-fund && npm run typecheck --prefix libs/egypt-price-scraper && npm run build -w @price-watch/contracts -w @price-watch/platform && npm run typecheck --workspaces --if-present && tsc -p tests/tsconfig.json",
     "lint": "eslint . && prettier --check . && npm run lint -w @price-watch/web",
     "format": "prettier --write .",
-    "test": "npm run test:unit && npm run test:web",
+    "test": "npm run test:unit && npm run test:web && npm ci --prefix libs/egypt-price-scraper --no-audit --no-fund && npm test --prefix libs/egypt-price-scraper",
     "test:unit": "jest --selectProjects unit",
     "test:integration": "jest --selectProjects integration --runInBand",
-    "test:all": "jest --runInBand && npm run test:web",
+    "test:all": "jest --runInBand && npm run test:web && npm ci --prefix libs/egypt-price-scraper --no-audit --no-fund && npm test --prefix libs/egypt-price-scraper",
     "test:web": "npm test -w @price-watch/web",
-    "smoke": "bash scripts/smoke.sh"
+    "smoke": "bash scripts/smoke.sh",
+    "deal-radar:scan": "npm ci --prefix libs/egypt-price-scraper --no-audit --no-fund && npm run build --prefix libs/egypt-price-scraper && node scripts/deal-radar-scan.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
@@ -45,5 +46,10 @@
     "testcontainers": "^12.2.2",
     "typescript": "5.9",
     "typescript-eslint": "^8.73.0"
+  },
+  "overrides": {
+    "archiver-utils": {
+      "glob": "^14.0.2"
+    }
   }
 }

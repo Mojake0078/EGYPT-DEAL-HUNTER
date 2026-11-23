@@ -13,6 +13,7 @@ export default tseslint.config(
       '**/node_modules/**',
       'coverage/**',
       'apps/web/**',
+      'libs/egypt-price-scraper/**',
       '*.config.js',
       'jest.setup.js',
     ],

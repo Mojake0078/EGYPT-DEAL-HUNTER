@@ -27,7 +27,14 @@ async function startFakeSidecar(): Promise<{ server: Server; port: number }> {
         status: 'SHOP_STATUS_FOUND',
         error: '',
         offers: [
-          { shop: 'noon', title: 'Demo', pricePiastres: 99_900, url: 'https://example.com/n', inStock: true },
+          {
+            shop: 'noon',
+            title: 'Demo',
+            pricePiastres: 99_900,
+            url: 'https://example.com/n',
+            inStock: true,
+            stockStatus: 'STOCK_STATUS_IN_STOCK',
+          },
         ],
       })
       call.write({ shop: 'jumia', status: 'SHOP_STATUS_BLOCKED', error: 'HTTP 403', offers: [] })
@@ -59,10 +66,17 @@ describe('GrpcScraperClient', () => {
     server.forceShutdown()
   })
 
-  it('collects the streamed shop results into offers and outcomes', async () => {
+  it('collects streamed offers with their explicit stock status', async () => {
     expect(await client.search('demo', 5000)).toEqual({
       offers: [
-        { shop: 'noon', title: 'Demo', pricePiastres: 99_900, url: 'https://example.com/n', inStock: true },
+        {
+          shop: 'noon',
+          title: 'Demo',
+          pricePiastres: 99_900,
+          url: 'https://example.com/n',
+          stockStatus: 'in_stock',
+          inStock: true,
+        },
       ],
       shops: [
         { shop: 'noon', status: 'found' },
@@ -71,10 +85,10 @@ describe('GrpcScraperClient', () => {
     })
   })
 
-  it('keeps the partial results and reports the error when the deadline passes', async () => {
+  it('keeps partial results when the deadline passes', async () => {
     const result = await client.search('slow', 300)
     expect(result.shops.map((s) => s.shop)).toEqual(['noon', 'jumia'])
-    expect(result.error).toMatch(/^4: /) // DEADLINE_EXCEEDED
+    expect(result.error).toMatch(/^4: /)
   })
 
   it('reports an unreachable sidecar as an error instead of throwing', async () => {
