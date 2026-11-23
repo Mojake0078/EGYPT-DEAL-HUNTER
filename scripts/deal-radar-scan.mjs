@@ -1,7 +1,7 @@
 import { Console } from 'node:console'
 import { mkdir, writeFile } from 'node:fs/promises'
 import process from 'node:process'
-import { searchAll } from '../libs/egypt-price-scraper/dist/index.js'
+import { sameModel, searchAll } from '../libs/egypt-price-scraper/dist/index.js'
 
 const logger = new Console({ stdout: process.stdout, stderr: process.stderr })
 const SHOPS = ['amazon', 'jumia', 'noon']
@@ -36,6 +36,13 @@ function stockStatus(listing) {
   return 'UNKNOWN'
 }
 
+function conditionStatus(title) {
+  if (/\\b(refurbished|renewed|reconditioned)\\b/i.test(title)) return 'REFURBISHED'
+  if (/\\b(used|pre-owned|second hand)\\b/i.test(title)) return 'USED'
+  if (/\\b(open box|open-box)\\b/i.test(title)) return 'OPEN_BOX'
+  return 'UNSPECIFIED'
+}
+
 function csvCell(value) {
   return `"${String(value ?? '').replace(/"/g, '""')}"`
 }
@@ -46,6 +53,7 @@ function toCsv(rows) {
     'shop',
     'price_egp',
     'stock_status',
+    'condition_status',
     'source_type',
     'matched_queries',
     'observed_at',
@@ -82,7 +90,11 @@ async function main() {
       })
 
       sourceRuns.push({ query, sources: result.sources })
-      for (const listing of result.listings) {
+      const hasCapacity = /\\b\\d+(?:\\.\\d+)?\\s?(?:gb|tb)\\b/i.test(query)
+      const preciseListings = result.listings.filter(
+        (listing) => !hasCapacity || sameModel(listing.title, query),
+      )
+      for (const listing of preciseListings) {
         if (!listing.url || !listing.price || listing.price <= 0) continue
         const key = `${listing.source}|${listing.url}`
         const existing = products.get(key)
@@ -96,6 +108,7 @@ async function main() {
           shop: listing.store,
           price_egp: listing.price,
           stock_status: stockStatus(listing),
+          condition_status: conditionStatus(listing.title),
           source_type: listing.via ?? 'direct',
           matchedQueries: new Set([query]),
           observed_at: observedAt,
@@ -108,7 +121,7 @@ async function main() {
       const blocked = result.sources.filter((source) => source.status === 'blocked').length
       const failed = result.sources.filter((source) => source.status === 'failed').length
       logger.log(
-        `  Listings: ${result.listings.length}; stores found: ${found}; blocked: ${blocked}; failed: ${failed}`,
+        `  Listings: ${preciseListings.length} after model matching; stores found: ${found}; blocked: ${blocked}; failed: ${failed}`,
       )
     } catch (error) {
       sourceRuns.push({ query, error: error instanceof Error ? error.message : String(error) })
