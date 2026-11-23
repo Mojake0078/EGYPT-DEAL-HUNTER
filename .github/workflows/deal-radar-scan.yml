@@ -6,14 +6,14 @@ on:
       query_limit:
         description: Number of starter product searches (1-10)
         required: false
-        default: "3"
+        default: '3'
   push:
     branches: [fix/stock-status-and-matching]
     paths:
-      - ".github/workflows/deal-radar-scan.yml"
-      - "scripts/deal-radar-scan.mjs"
-      - "libs/egypt-price-scraper/**"
-      - "package.json"
+      - '.github/workflows/deal-radar-scan.yml'
+      - 'scripts/deal-radar-scan.mjs'
+      - 'libs/egypt-price-scraper/**'
+      - 'package.json'
 
 permissions:
   contents: read
@@ -34,9 +34,6 @@ jobs:
 
       - name: Install project dependencies
         run: npm ci --no-audit --no-fund
-
-      - name: Print Prettier-normalized workflow for diagnosis
-        run: npx prettier .github/workflows/deal-radar-scan.yml
 
       - name: Run one-shot live discovery
         env:
