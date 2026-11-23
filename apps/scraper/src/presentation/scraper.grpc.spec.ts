@@ -43,7 +43,10 @@ describe('Scraper gRPC service (contract)', () => {
     const pkg = definition.pricewatch as unknown as {
       scraper: {
         v1: {
-          Scraper: new (url: string, creds: ReturnType<typeof credentials.createInsecure>) => ScraperStub
+          Scraper: new (
+            url: string,
+            creds: ReturnType<typeof credentials.createInsecure>,
+          ) => ScraperStub
         }
       }
     }
