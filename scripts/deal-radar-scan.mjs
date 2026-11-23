@@ -142,6 +142,32 @@ async function main() {
   const jsonPath = `reports/deal-radar-${stamp}.json`
   const completedAt = new Date().toISOString()
 
+  const shopHealth = Object.fromEntries(SHOPS.map((shop) => {
+    const outcomes = sourceRuns.flatMap((run) => run.sources ?? []).filter((source) => source.source === shop)
+    const count = (field, value) => outcomes.filter((source) => source[field] === value).length
+    return [shop, {
+      queries: outcomes.length,
+      listingsFound: outcomes.reduce((sum, source) => sum + (source.count ?? 0), 0),
+      effective: {
+        found: count('status', 'found'),
+        none: count('status', 'none'),
+        blocked: count('status', 'blocked'),
+        failed: count('status', 'failed'),
+      },
+      direct: {
+        found: count('directStatus', 'found'),
+        none: count('directStatus', 'none'),
+        blocked: count('directStatus', 'blocked'),
+        failed: count('directStatus', 'failed'),
+      },
+      pricenaFallback: {
+        found: count('fallbackStatus', 'found'),
+        none: count('fallbackStatus', 'none'),
+        failed: count('fallbackStatus', 'failed'),
+      },
+    }]
+  }))
+
   const report = {
     project: 'EGYPT DEAL HUNTER',
     startedAt,
@@ -149,6 +175,7 @@ async function main() {
     shops: SHOPS,
     queries,
     uniqueListings: rows.length,
+    shopHealth,
     sourceRuns,
     assessmentNote:
       'Prices are live observations, not verified discounts. Deal verification requires historical price snapshots.',
@@ -161,6 +188,10 @@ async function main() {
   logger.log(`\nSaved ${rows.length} unique listings:`)
   logger.log(`  CSV:  ${csvPath}`)
   logger.log(`  JSON: ${jsonPath}`)
+  logger.log('Per-shop health summary:')
+  for (const [shop, health] of Object.entries(shopHealth)) {
+    logger.log(`  ${shop}: ${health.listingsFound} offers; direct blocked=${health.direct.blocked}, direct failed=${health.direct.failed}; Pricena fallback found=${health.pricenaFallback.found}`)
+  }
   logger.log('Deal assessment: insufficient history; no discount claims are made.')
 }
 
