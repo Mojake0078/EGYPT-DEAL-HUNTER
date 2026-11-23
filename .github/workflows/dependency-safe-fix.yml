@@ -21,6 +21,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Upgrade npm to current lockfile-compatible release
+        run: npm install --global npm@11
       - name: Refresh lockfile for patched dependency ranges
         run: npm install --package-lock-only --ignore-scripts --no-fund
       - name: Print remaining audit summary
