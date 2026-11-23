@@ -102,7 +102,6 @@ export const OutboxEntity = new EntitySchema<OutboxRow>({
   },
 })
 
-
 export interface DealDiscoverySourceRow {
   id: string
   shop: 'amazon' | 'jumia' | 'noon'
