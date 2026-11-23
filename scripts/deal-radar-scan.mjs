@@ -16,14 +16,14 @@ const SEED_QUERIES = [
 ]
 
 function stockStatus(listing) {
-  const sold = listing.sold?.trim().toLowerCase().replace(/\\s+/g, ' ')
+  const sold = listing.sold?.trim().toLowerCase().replace(/\s+/g, ' ')
   if (sold && /^(out of stock|currently unavailable|unavailable|sold out)$/.test(sold)) {
     return 'OUT_OF_STOCK'
   }
   if (
     sold &&
-    (/^(in stock|available|available now|add to cart|only \\d+ left in stock)$/.test(sold) ||
-      /^only \\d+ left$/.test(sold))
+    (/^(in stock|available|available now|add to cart|only \d+ left in stock)$/.test(sold) ||
+      /^only \d+ left$/.test(sold))
   ) {
     return 'IN_STOCK'
   }
@@ -34,7 +34,7 @@ function stockStatus(listing) {
 }
 
 function csvCell(value) {
-  return `"${String(value ?? '').replace(/"/g, '""')} "`.replace(/" $/, '"')
+  return `"${String(value ?? '').replace(/"/g, '""')}"`
 }
 
 function toCsv(rows) {
@@ -52,7 +52,7 @@ function toCsv(rows) {
   return [
     columns.join(','),
     ...rows.map((row) => columns.map((column) => csvCell(row[column])).join(',')),
-  ].join('\\n')
+  ].join('\n')
 }
 
 async function main() {
@@ -70,7 +70,7 @@ async function main() {
   console.log(`Deal Radar one-shot scan: ${queries.length} queries across ${SHOPS.join(', ')}`)
 
   for (const query of queries) {
-    console.log(`\\nSearching: ${query}`)
+    console.log(`\nSearching: ${query}`)
     try {
       const result = await searchAll(query, {
         shops: SHOPS,
@@ -104,7 +104,9 @@ async function main() {
       const found = result.sources.filter((source) => source.status === 'found').length
       const blocked = result.sources.filter((source) => source.status === 'blocked').length
       const failed = result.sources.filter((source) => source.status === 'failed').length
-      console.log(`  Listings: ${result.listings.length}; stores found: ${found}; blocked: ${blocked}; failed: ${failed}`)
+      console.log(
+        `  Listings: ${result.listings.length}; stores found: ${found}; blocked: ${blocked}; failed: ${failed}`,
+      )
     } catch (error) {
       sourceRuns.push({ query, error: error instanceof Error ? error.message : String(error) })
       console.error(`  Query failed: ${error instanceof Error ? error.message : String(error)}`)
@@ -140,7 +142,7 @@ async function main() {
   await writeFile(csvPath, toCsv(rows), 'utf8')
   await writeFile(jsonPath, JSON.stringify(report, null, 2), 'utf8')
 
-  console.log(`\\nSaved ${rows.length} unique listings:`)
+  console.log(`\nSaved ${rows.length} unique listings:`)
   console.log(`  CSV:  ${csvPath}`)
   console.log(`  JSON: ${jsonPath}`)
   console.log('Deal assessment: insufficient history; no discount claims are made.')
