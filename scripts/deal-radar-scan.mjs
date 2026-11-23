@@ -90,7 +90,7 @@ async function main() {
       })
 
       sourceRuns.push({ query, sources: result.sources })
-      const hasCapacity = /\b\d+(?:\.\d+)?\\s?(?:gb|tb)\b/i.test(query)
+      const hasCapacity = /\b\d+(?:\.\d+)?\s?(?:gb|tb)\b/i.test(query)
       const preciseListings = result.listings.filter(
         (listing) => !hasCapacity || sameModel(listing.title, query),
       )
