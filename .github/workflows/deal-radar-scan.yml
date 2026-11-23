@@ -35,6 +35,9 @@ jobs:
       - name: Install project dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Print Prettier-normalized workflow for diagnosis
+        run: npx prettier .github/workflows/deal-radar-scan.yml
+
       - name: Run one-shot live discovery
         env:
           DEAL_RADAR_QUERY_LIMIT: ${{ github.event.inputs.query_limit || '3' }}
