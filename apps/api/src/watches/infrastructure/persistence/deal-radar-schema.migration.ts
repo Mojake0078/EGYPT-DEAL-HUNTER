@@ -2,7 +2,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm'
 
 /** Additive foundation for the independent hourly Deal Radar pipeline. */
 export class DealRadarSchema1763900000000 implements MigrationInterface {
-  name = 'DealRadarSchema1763900000000'
+  name = 'DealRadarSchema1763900000'
 
   async up(q: QueryRunner): Promise<void> {
     await q.query(`
@@ -28,7 +28,9 @@ export class DealRadarSchema1763900000000 implements MigrationInterface {
         items_persisted integer NOT NULL DEFAULT 0 CHECK (items_persisted >= 0),
         error text
       )`)
-    await q.query(`CREATE INDEX ix_deal_runs_source_time ON deal_discovery_runs (source_id, started_at DESC)`)
+    await q.query(
+      `CREATE INDEX ix_deal_runs_source_time ON deal_discovery_runs (source_id, started_at DESC)`,
+    )
     await q.query(`
       CREATE TABLE deal_products (
         id uuid PRIMARY KEY,
@@ -60,7 +62,9 @@ export class DealRadarSchema1763900000000 implements MigrationInterface {
         UNIQUE (shop, normalized_url)
       )`)
     await q.query(`CREATE INDEX ix_deal_listings_product ON deal_listings (product_id) WHERE product_id IS NOT NULL`)
-    await q.query(`CREATE INDEX ix_deal_listings_shop_seen ON deal_listings (shop, last_seen_at DESC)`)
+    await q.query(
+      `CREATE INDEX ix_deal_listings_shop_seen ON deal_listings (shop, last_seen_at DESC)`,
+    )
     await q.query(`
       CREATE TABLE deal_price_snapshots (
         id uuid PRIMARY KEY,
@@ -71,7 +75,9 @@ export class DealRadarSchema1763900000000 implements MigrationInterface {
         observed_at timestamptz NOT NULL,
         UNIQUE (listing_id, discovery_run_id)
       )`)
-    await q.query(`CREATE INDEX ix_deal_snapshots_listing_time ON deal_price_snapshots (listing_id, observed_at DESC)`)
+    await q.query(
+      `CREATE INDEX ix_deal_snapshots_listing_time ON deal_price_snapshots (listing_id, observed_at DESC)`,
+    )
     await q.query(`
       CREATE TABLE deal_candidates (
         id uuid PRIMARY KEY,
