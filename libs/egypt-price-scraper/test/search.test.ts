@@ -48,7 +48,7 @@ test('searchAll: found / none / blocked / failed per shop, cheapest first', asyn
 test('searchAll: Pricena fills in for a shop that could not be read', async () => {
   const io = fakeIo([[/amazon\.eg/, new Error('socket hang up')], ...PRICENA])
   const res = await searchAll('airpods pro 2', { shops: ['amazon'], io })
-  assert.deepEqual(res.sources, [{ source: 'amazon', store: 'Amazon.eg', status: 'found', via: 'pricena', count: 1 }])
+  assert.deepEqual(res.sources, [{ source: 'amazon', store: 'Amazon.eg', status: 'found', via: 'pricena', count: 1, directStatus: 'failed', fallbackStatus: 'found', error: 'socket hang up' }])
   assert.equal(res.listings[0].price, 10999)
   assert.equal(res.listings[0].via, 'pricena')
 })
