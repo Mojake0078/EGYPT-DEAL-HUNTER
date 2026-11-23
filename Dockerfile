@@ -52,6 +52,10 @@ USER node
 CMD ["node", "dist/main.js"]
 
 FROM service AS scraper
+# Amazon.eg's bot checks require curl; the vendored scraper falls back to Node fetch when curl is absent.
+USER root
+RUN apk add --no-cache curl
+USER node
 # The runtime module resolves this repository-local package by relative path.
 COPY --from=build /repo/libs/egypt-price-scraper/package.json /repo/libs/egypt-price-scraper/package.json
 COPY --from=build /repo/libs/egypt-price-scraper/dist /repo/libs/egypt-price-scraper/dist
