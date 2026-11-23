@@ -59,7 +59,9 @@ export class DealRadarSchema1763900000000 implements MigrationInterface {
         last_checked_at timestamptz NOT NULL,
         UNIQUE (shop, normalized_url)
       )`)
-    await q.query(`CREATE INDEX ix_deal_listings_product ON deal_listings (product_id) WHERE product_id IS NOT NULL`)
+    await q.query(
+      `CREATE INDEX ix_deal_listings_product ON deal_listings (product_id) WHERE product_id IS NOT NULL`,
+    )
     await q.query(`CREATE INDEX ix_deal_listings_shop_seen ON deal_listings (shop, last_seen_at DESC)`)
     await q.query(`
       CREATE TABLE deal_price_snapshots (
