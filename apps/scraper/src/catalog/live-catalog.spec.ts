@@ -123,7 +123,11 @@ describe('LiveCatalog', () => {
       results.push(item)
     }
 
-    expect(library.searchAll).toHaveBeenCalledWith('mouse', { shops: ['jumia'], timeoutMs: 1000, concurrency: 2 })
+    expect(library.searchAll).toHaveBeenCalledWith('mouse', {
+      shops: ['jumia'],
+      timeoutMs: 1000,
+      concurrency: 2,
+    })
     expect(results[0].offers.map((offer) => [offer.title, offer.stockStatus])).toEqual([
       ['Mouse direct', 'STOCK_STATUS_IN_STOCK'],
       ['Mouse Pricena', 'STOCK_STATUS_UNKNOWN'],
